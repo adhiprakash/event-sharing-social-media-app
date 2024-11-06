@@ -1,0 +1,6 @@
+void addComment(String eventId, String commentText) {
+  FirebaseFirestore.instance.collection('events').doc(eventId).collection('comments').add({
+    'text': commentText,
+    'timestamp': Timestamp.now(),
+  });
+}
