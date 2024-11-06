@@ -1,0 +1,63 @@
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+class CreateEventScreen extends StatefulWidget {
+  @override
+  _CreateEventScreenState createState() => _CreateEventScreenState();
+}
+
+class _CreateEventScreenState extends State<CreateEventScreen> {
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    setState(() {
+      _imageFile = pickedFile;
+    });
+  }
+
+  Future<void> _uploadEvent() async {
+    if (_imageFile == null) return;
+
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('event_images')
+        .child(DateTime.now().toString() + '.jpg');
+    await ref.putFile(File(_imageFile!.path));
+    final url = await ref.getDownloadURL();
+
+    await FirebaseFirestore.instance.collection('events').add({
+      'title': _titleController.text,
+      'description': _descriptionController.text,
+      'imageUrl': url,
+      'likes': 0,
+      'createdAt': Timestamp.now(),
+    });
+
+    Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Create Event')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            TextField(controller: _titleController, decoration: InputDecoration(labelText: 'Title')),
+            TextField(controller: _descriptionController, decoration: InputDecoration(labelText: 'Description')),
+            _imageFile != null ? Image.file(File(_imageFile!.path)) : Container(),
+            ElevatedButton(onPressed: _pickImage, child: Text('Pick Image')),
+            ElevatedButton(onPressed: _uploadEvent, child: Text('Upload Event')),
+          ],
+        ),
+      ),
+    );
+  }
+}
