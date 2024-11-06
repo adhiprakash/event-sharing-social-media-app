@@ -1,0 +1,16 @@
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
+final FlutterLocalNotificationsPlugin notificationsPlugin = FlutterLocalNotificationsPlugin();
+
+void initializeNotifications() {
+  final settings = InitializationSettings(
+    android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+  );
+  notificationsPlugin.initialize(settings);
+}
+
+Future<void> showNotification(String title, String body) async {
+  const androidDetails = AndroidNotificationDetails('channelId', 'channelName', importance: Importance.max);
+  const details = NotificationDetails(android: androidDetails);
+  await notificationsPlugin.show(0, title, body, details);
+}
